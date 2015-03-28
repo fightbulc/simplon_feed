@@ -1,0 +1,29 @@
+{
+    "name": "simplon/feed",
+    "description": "Simplon Feed - RSS/ATOM reader/producer",
+    "homepage": "https://github.com/fightbulc/simplon_feed",
+    "type": "library",
+    "keywords": [
+        "rss",
+        "atom",
+        "read",
+        "produce"
+    ],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Tino Ehrich",
+            "email": "tino@bigpun.me",
+            "role": "developer"
+        }
+    ],
+    "minimum-stability": "dev",
+    "require": {
+        "php": ">=5.4"
+    },
+    "autoload": {
+        "psr-4": {
+            "Simplon\\Feed\\": "src/"
+        }
+    }
+}
