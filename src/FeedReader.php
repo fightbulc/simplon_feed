@@ -2,6 +2,9 @@
 
 namespace Simplon\Feed;
 
+use Simplon\Feed\Vo\Atom\AtomVo;
+use Simplon\Feed\Vo\Rss\RssVo;
+
 /**
  * FeedReader
  * @package Simplon\Feed
@@ -25,11 +28,35 @@ class FeedReader
     private $namespaces = [];
 
     /**
+     * @param string $url
+     *
+     * @return RssVo
+     */
+    public function rss($url)
+    {
+        $this->fetch($url)->parseRss();
+
+        return new RssVo($this->data);
+    }
+
+    /**
+     * @param string $url
+     *
+     * @return AtomVo
+     */
+    public function atom($url)
+    {
+        $this->fetch($url)->parseAtom();
+
+        return new AtomVo($this->data);
+    }
+
+    /**
      * @param $url
      *
-     * @return $this
+     * @return FeedReader
      */
-    public function readUrl($url)
+    private function fetch($url)
     {
         $this->data = [];
         $this->namespaces = [];
@@ -40,41 +67,13 @@ class FeedReader
     }
 
     /**
-     * @return $this
-     * @throws \Exception
-     */
-    public function parse()
-    {
-        switch ($this->simpleXmlElement->getName())
-        {
-            case 'feed':
-                break;
-
-            case 'rss':
-                $this->parseRss();
-                break;
-
-            default:
-                throw new \Exception('Unknown feed type');
-        }
-
-        return $this;
-    }
-
-    /**
-     * @return array
-     */
-    public function getData()
-    {
-        return $this->data;
-    }
-
-    /**
-     * @return $this
+     * @return FeedReader
      */
     private function parseRss()
     {
         $this->namespaces = $this->simpleXmlElement->getNamespaces(true);
+
+        /** @noinspection PhpUndefinedFieldInspection */
         $channel = $this->simpleXmlElement->channel;
 
         // channel infos
@@ -84,6 +83,218 @@ class FeedReader
         $this->parseRssChannelItems($channel[0]);
 
         return $this;
+    }
+
+    /**
+     * @param \SimpleXMLElement $channel
+     *
+     * @return FeedReader
+     */
+    private function parseRssChannel(\SimpleXMLElement $channel)
+    {
+        $knownTags = [
+            'title',
+            'link',
+            'description',
+            'language',
+        ];
+
+        // read data
+        $this->data = $this->readTags($knownTags, $channel, 'item');
+
+        // namespace data
+        $namespaceData = $this->getRssNamespaceData($channel);
+
+        if (empty($namespaceData) === false)
+        {
+            $this->data['namespaces'] = $namespaceData;
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param \SimpleXMLElement $channel
+     *
+     * @return FeedReader
+     */
+    private function parseRssChannelItems(\SimpleXMLElement $channel)
+    {
+        $knownTags = [
+            'guid',
+            'title',
+            'link',
+            'description',
+            'author',
+            'pubDate',
+        ];
+
+        /** @noinspection PhpUndefinedFieldInspection */
+        foreach ($channel->item as $entry)
+        {
+            // read data
+            $entryData = $this->readTags($knownTags, $entry);
+
+            // namespace data
+            $namespaceData = $this->getRssNamespaceData($entry);
+
+            if (empty($namespaceData) === false)
+            {
+                $entryData['namespaces'] = $namespaceData;
+            }
+
+            $this->data['items'][] = $entryData;
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return FeedReader
+     */
+    private function parseAtom()
+    {
+        $this->namespaces = $this->simpleXmlElement->getNamespaces(true);
+
+        /** @noinspection PhpUndefinedFieldInspection */
+        $channel = $this->simpleXmlElement;
+
+        // channel infos
+        $this->parseAtomChannel($channel[0]);
+
+        // item infos
+        $this->parseAtomChannelEntries($channel[0]);
+
+        return $this;
+    }
+
+    /**
+     * @param \SimpleXMLElement $channel
+     *
+     * @return FeedReader
+     */
+    private function parseAtomChannel(\SimpleXMLElement $channel)
+    {
+        $knownTags = [
+            'updated',
+            'id',
+            'title',
+            'link',
+            'author',
+        ];
+
+        // read data
+        $this->data = $this->readTags($knownTags, $channel, 'entry');
+
+        return $this;
+    }
+
+    /**
+     * @param \SimpleXMLElement $channel
+     *
+     * @return FeedReader
+     */
+    private function parseAtomChannelEntries(\SimpleXMLElement $channel)
+    {
+        $knownTags = [
+            'id',
+            'title',
+            'author',
+            'link',
+            'published',
+            'updated',
+            'summary',
+            'content',
+        ];
+
+        /** @noinspection PhpUndefinedFieldInspection */
+        foreach ($channel->entry as $entry)
+        {
+            // read data
+            $entryData = $this->readTags($knownTags, $entry);
+
+            $this->data['entries'][] = $entryData;
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param array  $data
+     * @param string $attr
+     * @param mixed  $value
+     *
+     * @return array
+     */
+    private function handleDataAssignment(array $data, $attr, $value)
+    {
+        if (isset($data[$attr]))
+        {
+            if (gettype($data[$attr]) === 'string')
+            {
+                $data[$attr] = [$data[$attr]];
+            }
+
+            $data[$attr][] = $value;
+        }
+        else
+        {
+            $data[$attr] = $value;
+        }
+
+        return $data;
+    }
+
+    /**
+     * @param array             $knownTags
+     * @param \SimpleXMLElement $entry
+     * @param null|string       $ignoreTags
+     *
+     * @return array
+     */
+    private function readTags(array $knownTags, $entry, $ignoreTags = null)
+    {
+        $data = [
+            'metas' => []
+        ];
+
+        foreach ($entry as $tag => $value)
+        {
+            if ($ignoreTags !== null && strpos($ignoreTags, $tag) !== false)
+            {
+                continue;
+            }
+
+            // read attributes
+            /** @noinspection PhpUndefinedMethodInspection */
+            $attributes = $value->attributes();
+
+            // cast value
+            $value = $this->cleanData($value);
+
+            // save known data
+            if (in_array($tag, $knownTags) === true)
+            {
+                $data = $this->handleDataAssignment($data, $tag, $value);
+
+                if ($attributes !== null)
+                {
+                    $data = $this->handleAttributes($attributes, $data);
+                }
+
+                continue;
+            }
+
+            // save unknown data
+            $data['metas'] = $this->handleDataAssignment($data['metas'], $tag, $value);
+
+            if ($attributes !== null)
+            {
+                $data['metas'][$tag] = $this->handleAttributes($attributes, $data['metas'][$tag]);
+            }
+        }
+
+        return $data;
     }
 
     /**
@@ -101,7 +312,14 @@ class FeedReader
 
             foreach ($nsElements as $k => $v)
             {
-                $data[$ns][$k] = trim($v);
+                $data[$ns][$k] = $this->cleanData($v);
+
+                /** @noinspection PhpUndefinedMethodInspection */
+                if ($v->attributes() !== null)
+                {
+                    /** @noinspection PhpUndefinedMethodInspection */
+                    $data[$ns][$k] = $this->handleAttributes($v->attributes(), $data[$ns][$k]);
+                }
             }
         }
 
@@ -109,56 +327,48 @@ class FeedReader
     }
 
     /**
-     * @param \SimpleXMLElement $channel
+     * @param \SimpleXMLElement $attributes
+     * @param mixed             $data
      *
-     * @return $this
+     * @return array
      */
-    private function parseRssChannel(\SimpleXMLElement $channel)
+    private function handleAttributes($attributes, $data)
     {
-        $this->data['title'] = (string)$channel->title;
-        $this->data['link'] = (string)$channel->link;
-        $this->data['description'] = (string)$channel->description;
-        $this->data['language'] = (string)$channel->language;
-
-        // namespace data
-        $namespaceData = $this->getRssNamespaceData($channel);
-
-        if (empty($namespaceData) === false)
+        if ($attributes->count() > 0)
         {
-            $this->data['ns'] = $namespaceData;
+            if (gettype($data) === 'string' && empty($data) === false)
+            {
+                $data = ['content' => $data];
+            }
+
+            foreach ($attributes as $k => $v)
+            {
+                $data['attrs'][$k] = $this->cleanData($v);
+            }
         }
 
-        return $this;
+        return $data;
     }
 
     /**
-     * @param \SimpleXMLElement $channel
+     * @param \SimpleXMLElement $value
      *
-     * @return $this
+     * @return array|string
      */
-    private function parseRssChannelItems(\SimpleXMLElement $channel)
+    private function cleanData($value)
     {
-        foreach ($channel->item as $entry)
+        if ($value->count() > 0)
         {
-            $entryData = [
-                'guid'        => (string)$entry->guid,
-                'title'       => (string)$entry->title,
-                'link'        => (string)$entry->link,
-                'description' => (string)$entry->description,
-                'author'      => (string)$entry->author,
-            ];
+            $data = [];
 
-            // namespace data
-            $namespaceData = $this->getRssNamespaceData($entry);
-
-            if (empty($namespaceData) === false)
+            foreach ($value as $k => $v)
             {
-                $entryData['ns'] = $namespaceData;
+                $data[$k] = $this->cleanData($v);
             }
 
-            $this->data['items'][] = $entryData;
+            return (array)$data;
         }
 
-        return $this;
+        return trim($value);
     }
 }
