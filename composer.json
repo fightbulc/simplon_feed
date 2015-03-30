@@ -1,13 +1,16 @@
 {
     "name": "simplon/feed",
-    "description": "Simplon Feed - RSS/ATOM reader/producer",
+    "description": "Reads RSS 2.0 / ATOM 1.0 feeds. Supports namespaces and meta data.",
     "homepage": "https://github.com/fightbulc/simplon_feed",
     "type": "library",
     "keywords": [
         "rss",
+        "rss2.0",
         "atom",
+        "atom1.0",
         "read",
-        "produce"
+        "namespaces",
+        "meta data"
     ],
     "license": "MIT",
     "authors": [
