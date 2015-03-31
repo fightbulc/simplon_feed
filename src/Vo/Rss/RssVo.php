@@ -2,6 +2,8 @@
 
 namespace Simplon\Feed\Vo\Rss;
 
+use Simplon\Feed\CastAway;
+
 /**
  * RssVo
  * @package Simplon\Feed\Vo\Rss
@@ -10,29 +12,69 @@ namespace Simplon\Feed\Vo\Rss;
 class RssVo extends AbstractRssVo
 {
     /**
-     * @var string
+     * @var array
+     */
+    private $data;
+
+    /**
+     * @var null|string
      */
     protected $title;
 
     /**
-     * @var string
+     * @var null|string
      */
     protected $link;
 
     /**
-     * @var string
+     * @var null|string
      */
     protected $description;
 
     /**
-     * @var string
+     * @var null|array
+     */
+    protected $image;
+
+    /**
+     * @var null|array
+     */
+    protected $category;
+
+    /**
+     * @var null|string
      */
     protected $languge;
 
     /**
-     * @var array
+     * @var null|\DateTime
+     */
+    protected $pubDate;
+
+    /**
+     * @var null|\DateTime
+     */
+    protected $lastBuildDate;
+
+    /**
+     * @var null|int
+     */
+    protected $ttl;
+
+    /**
+     * @var null|array
      */
     protected $items;
+
+    /**
+     * @var null|string
+     */
+    protected $generator;
+
+    /**
+     * @var null|array
+     */
+    protected $cloud;
 
     /**
      * @param array $data
@@ -40,6 +82,9 @@ class RssVo extends AbstractRssVo
     public function __construct(array $data)
     {
         $vars = get_class_vars(get_class($this));
+
+        // cache raw data
+        $this->data = $data;
 
         foreach ($vars as $name => $val)
         {
@@ -51,11 +96,75 @@ class RssVo extends AbstractRssVo
     }
 
     /**
+     * @return array
+     */
+    public function toArray()
+    {
+        return $this->data;
+    }
+
+    /**
+     * @return array|null
+     */
+    public function getCloud()
+    {
+        return CastAway::toArray($this->cloud);
+    }
+
+    /**
+     * @return null|string
+     */
+    public function getGenerator()
+    {
+        return CastAway::toString($this->generator);
+    }
+
+    /**
+     * @return null|int
+     */
+    public function getTtl()
+    {
+        return CastAway::toInt($this->ttl);
+    }
+
+    /**
+     * @return null|array
+     */
+    public function getCategory()
+    {
+        return CastAway::toArray($this->category);
+    }
+
+    /**
+     * @return null|array
+     */
+    public function getImage()
+    {
+        return CastAway::toArray($this->image);
+    }
+
+    /**
+     * @return \DateTime|null
+     */
+    public function getLastBuildDate()
+    {
+        return CastAway::toDateTime($this->lastBuildDate);
+    }
+
+    /**
+     * @return \DateTime|null
+     */
+    public function getPubDate()
+    {
+        return CastAway::toDateTime($this->pubDate);
+    }
+
+    /**
      * @return string
      */
     public function getDescription()
     {
-        return (string)$this->description;
+        return CastAway::toString($this->description);
     }
 
     /**
@@ -91,7 +200,7 @@ class RssVo extends AbstractRssVo
      */
     public function getLanguge()
     {
-        return (string)$this->languge;
+        return CastAway::toString($this->languge);
     }
 
     /**
@@ -99,7 +208,7 @@ class RssVo extends AbstractRssVo
      */
     public function getLink()
     {
-        return (string)$this->link;
+        return CastAway::toString($this->link);
     }
 
     /**
@@ -107,6 +216,6 @@ class RssVo extends AbstractRssVo
      */
     public function getTitle()
     {
-        return (string)$this->title;
+        return CastAway::toString($this->title);
     }
 }

@@ -97,6 +97,13 @@ class FeedReader
             'link',
             'description',
             'language',
+            'image',
+            'category',
+            'ttl',
+            'generator',
+            'cloud',
+            'pubDate',
+            'lastBuildDate',
         ];
 
         // read data
@@ -127,6 +134,10 @@ class FeedReader
             'description',
             'author',
             'pubDate',
+            'category',
+            'comments',
+            'source',
+            'enclosure',
         ];
 
         /** @noinspection PhpUndefinedFieldInspection */
@@ -176,11 +187,18 @@ class FeedReader
     private function parseAtomChannel(\SimpleXMLElement $channel)
     {
         $knownTags = [
-            'updated',
             'id',
             'title',
-            'link',
+            'subtitle',
             'author',
+            'link',
+            'updated',
+            'category',
+            'contributor',
+            'generator',
+            'icon',
+            'logo',
+            'rights',
         ];
 
         // read data
@@ -199,12 +217,16 @@ class FeedReader
         $knownTags = [
             'id',
             'title',
-            'author',
-            'link',
-            'published',
-            'updated',
             'summary',
             'content',
+            'link',
+            'author',
+            'updated',
+            'published',
+            'category',
+            'contributor',
+            'source',
+            'rights',
         ];
 
         /** @noinspection PhpUndefinedFieldInspection */
@@ -220,26 +242,116 @@ class FeedReader
     }
 
     /**
+     * @param \SimpleXMLElement $element
+     *
+     * @return array
+     */
+    private function getRssNamespaceData(\SimpleXMLElement $element)
+    {
+        $data = [];
+
+        foreach ($this->namespaces as $ns => $url)
+        {
+            $nsElements = $element->children($url);
+
+            foreach ($nsElements as $k => $v)
+            {
+                $data[$ns][$k] = $this->cleanData($v);
+
+                /** @noinspection PhpUndefinedMethodInspection */
+                if ($v->attributes() !== null)
+                {
+                    /** @noinspection PhpUndefinedMethodInspection */
+                    $data[$ns][$k] = $this->handleAttributes($data[$ns][$k], $v->attributes());
+                }
+            }
+        }
+
+        return $data;
+    }
+
+    /**
+     * @param mixed             $data
+     * @param \SimpleXMLElement $attributes
+     *
+     * @return array
+     */
+    private function handleAttributes($data, $attributes)
+    {
+        if ($attributes->count() > 0)
+        {
+            if (gettype($data) === 'string' && empty($data) === false)
+            {
+                $data = ['content' => $data];
+            }
+
+            $helper = [];
+
+            foreach ($attributes as $k => $v)
+            {
+                $helper[$k] = $this->cleanData($v);
+            }
+
+            if (isset($data['attrs']))
+            {
+                $data = [
+                    ['attrs' => $data['attrs']],
+                    ['attrs' => $helper],
+                ];
+            }
+            elseif (isset($data[0]['attrs']))
+            {
+                $data[] = ['attrs' => $helper];
+            }
+            else
+            {
+                $data['attrs'] = $helper;
+            }
+        }
+
+        return $data;
+    }
+
+    /**
      * @param array  $data
-     * @param string $attr
+     * @param string $tag
      * @param mixed  $value
      *
      * @return array
      */
-    private function handleDataAssignment(array $data, $attr, $value)
+    private function handleDataAssignment(array $data, $tag, $value)
     {
-        if (isset($data[$attr]))
+        /** @noinspection PhpUndefinedMethodInspection */
+        $attributes = $value->attributes();
+
+        // cast value
+        $value = $this->cleanData($value);
+
+        // catch multi-assignments
+        if (isset($data[$tag]))
         {
-            if (gettype($data[$attr]) === 'string')
+            if (gettype($data[$tag]) === 'string')
             {
-                $data[$attr] = [$data[$attr]];
+                $data[$tag] = [$data[$tag]];
             }
 
-            $data[$attr][] = $value;
+            // only set if we got some value
+            if (empty($value) === false)
+            {
+                $data[$tag][] = $value;
+            }
         }
+
+        // first assignment
         else
         {
-            $data[$attr] = $value;
+            $data[$tag] = $value;
+        }
+
+        // handle attributes
+        if ($attributes !== null)
+        {
+            $data[$tag] = $this->handleAttributes($data[$tag], $attributes);
         }
 
         return $data;
@@ -265,86 +377,21 @@ class FeedReader
                 continue;
             }
 
-            // read attributes
-            /** @noinspection PhpUndefinedMethodInspection */
-            $attributes = $value->attributes();
-
-            // cast value
-            $value = $this->cleanData($value);
-
             // save known data
             if (in_array($tag, $knownTags) === true)
             {
                 $data = $this->handleDataAssignment($data, $tag, $value);
-
-                if ($attributes !== null)
-                {
-                    $data = $this->handleAttributes($attributes, $data);
-                }
 
                 continue;
             }
 
             // save unknown data
             $data['metas'] = $this->handleDataAssignment($data['metas'], $tag, $value);
-
-            if ($attributes !== null)
-            {
-                $data['metas'][$tag] = $this->handleAttributes($attributes, $data['metas'][$tag]);
-            }
         }
 
-        return $data;
-    }
-
-    /**
-     * @param \SimpleXMLElement $element
-     *
-     * @return array
-     */
-    private function getRssNamespaceData(\SimpleXMLElement $element)
-    {
-        $data = [];
-
-        foreach ($this->namespaces as $ns => $url)
+        if (empty($data['metas']))
         {
-            $nsElements = $element->children($url);
-
-            foreach ($nsElements as $k => $v)
-            {
-                $data[$ns][$k] = $this->cleanData($v);
-
-                /** @noinspection PhpUndefinedMethodInspection */
-                if ($v->attributes() !== null)
-                {
-                    /** @noinspection PhpUndefinedMethodInspection */
-                    $data[$ns][$k] = $this->handleAttributes($v->attributes(), $data[$ns][$k]);
-                }
-            }
-        }
-
-        return $data;
-    }
-
-    /**
-     * @param \SimpleXMLElement $attributes
-     * @param mixed             $data
-     *
-     * @return array
-     */
-    private function handleAttributes($attributes, $data)
-    {
-        if ($attributes->count() > 0)
-        {
-            if (gettype($data) === 'string' && empty($data) === false)
-            {
-                $data = ['content' => $data];
-            }
-
-            foreach ($attributes as $k => $v)
-            {
-                $data['attrs'][$k] = $this->cleanData($v);
-            }
+            unset($data['metas']);
         }
 
         return $data;

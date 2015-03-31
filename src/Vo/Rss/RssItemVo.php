@@ -2,6 +2,8 @@
 
 namespace Simplon\Feed\Vo\Rss;
 
+use Simplon\Feed\CastAway;
+
 /**
  * RssItemVo
  * @package Simplon\Feed\Vo\Rss
@@ -10,29 +12,54 @@ namespace Simplon\Feed\Vo\Rss;
 class RssItemVo extends AbstractRssVo
 {
     /**
-     * @var string
+     * @var array
+     */
+    private $data;
+
+    /**
+     * @var null|string
      */
     protected $guid;
 
     /**
-     * @var string
+     * @var null|string
      */
     protected $title;
 
     /**
-     * @var string
+     * @var null|string
      */
     protected $link;
 
     /**
-     * @var string
+     * @var null|string
      */
     protected $description;
 
     /**
-     * @var string
+     * @var null|string
      */
     protected $author;
+
+    /**
+     * @var null|string
+     */
+    protected $comments;
+
+    /**
+     * @var null|string
+     */
+    protected $source;
+
+    /**
+     * @var null|array
+     */
+    protected $enclosure;
+
+    /**
+     * @var null|array
+     */
+    protected $category;
 
     /**
      * @var null|\DateTime
@@ -46,6 +73,9 @@ class RssItemVo extends AbstractRssVo
     {
         $vars = get_class_vars(get_class($this));
 
+        // cache raw data
+        $this->data = $data;
+
         foreach ($vars as $name => $val)
         {
             if (isset($data[$name]))
@@ -56,16 +86,51 @@ class RssItemVo extends AbstractRssVo
     }
 
     /**
+     * @return array
+     */
+    public function toArray()
+    {
+        return $this->data;
+    }
+
+    /**
+     * @return array|null
+     */
+    public function getCategory()
+    {
+        return CastAway::toArray($this->category);
+    }
+
+    /**
+     * @return null|string
+     */
+    public function getComments()
+    {
+        return CastAway::toString($this->comments);
+    }
+
+    /**
+     * @return null|string
+     */
+    public function getSource()
+    {
+        return CastAway::toString($this->source);
+    }
+
+    /**
+     * @return array|null
+     */
+    public function getEnclosure()
+    {
+        return CastAway::toArray($this->enclosure);
+    }
+
+    /**
      * @return \DateTime
      */
     public function getPubDate()
     {
-        if ($this->pubDate !== null)
-        {
-            return new \DateTime($this->pubDate);
-        }
-
-        return null;
+        return CastAway::toDateTime($this->pubDate);
     }
 
     /**
@@ -73,7 +138,7 @@ class RssItemVo extends AbstractRssVo
      */
     public function getGuid()
     {
-        return (string)$this->guid;
+        return CastAway::toString($this->guid);
     }
 
     /**
@@ -81,7 +146,7 @@ class RssItemVo extends AbstractRssVo
      */
     public function getDescription()
     {
-        return (string)$this->description;
+        return CastAway::toString($this->description);
     }
 
     /**
@@ -89,7 +154,7 @@ class RssItemVo extends AbstractRssVo
      */
     public function getAuthor()
     {
-        return (string)$this->author;
+        return CastAway::toString($this->author);
     }
 
     /**
@@ -97,7 +162,7 @@ class RssItemVo extends AbstractRssVo
      */
     public function getLink()
     {
-        return (string)$this->link;
+        return CastAway::toString($this->link);
     }
 
     /**
@@ -105,6 +170,6 @@ class RssItemVo extends AbstractRssVo
      */
     public function getTitle()
     {
-        return (string)$this->title;
+        return CastAway::toString($this->title);
     }
 }

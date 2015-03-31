@@ -10,16 +10,38 @@
                        ||            ||       `|| ||| || ||     ||
                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 ```
+## Intro
 
-Still in the process of wrapping everything up. There are only a couple of hick-ups in parsing
-attributes from multi-tag occurences. Anyway, I am on it but most of the feeds should be parsed correctly.
+When I was searching for an RSS feed reader I did not find any which was able to pass along ```namespaced``` data. So I wrote one which
+parses all possible fields, combined with ```namespace fields``` and possible ```custom fields```.  Since its hard to stand on one leg I also
+added a parser for the ```ATOM``` format. Same story here only a couple of variations when it comes to the feed tag names.
+
+I've spent some time on parsing all tags including possible attributes. However, if you run in to any issues let me know.
+
+## 1. Install
+
+Easy install via composer. Still no idea what composer is? Inform yourself [here](http://getcomposer.org).
+
+```json
+{
+  "require": {
+    "simplon/feed": "*"
+  }
+}
+```
  
-### Usage RSS  
+## 2. Usage
+
+Following you can find two examples for fetching, parsing and reading feeds. Note that both examples require composer to be ```required``` beforehand.
+ 
+### RSS  2.0
 ```php
+use Simplon\Feed\FeedReader;
+
 $feed = new FeedReader();
 
 // lets fetch all feed details and its items
-$feedVo = $feed->rss('http://www.spiegel.de/schlagzeilen/tops/index.rss');
+$feedVo = $feed->rss('http://feeds.feedburner.com/techcrunch/europe?format=xml');
 
 // e.g. reading title
 var_dump($feedVo->getTitle());
@@ -43,11 +65,40 @@ foreach($feedVo->getItems() as $item)
     var_dump($item->getMetas());
 }
 ```
- 
-### Usage ATOM
 
-In the process. Have a look at ```/test/test.php```
+### ATOM 1.0
+
+```php
+use Simplon\Feed\FeedReader;
+
+$feed = new FeedReader();
+
+// lets fetch all feed details and its items
+$feedVo = $feed->atom('http://vvv.tobiassjosten.net/feed.atom');
+
+// e.g. reading title
+var_dump($feedVo->getTitle());
+
+// access possible namespaces
+var_dump($feedVo->getNamespaces());
+
+// access possible meta data
+var_dump($feedVo->getMetas());
+
+// access all items
+foreach($feedVo->getItems() as $item)
+{
+    // e.g. reading title
+    var_dump($item->getTitle());
     
+    // access possible namespaces
+    var_dump($item->getNamespaces());
+    
+    // access possible meta data
+    var_dump($item->getMetas());
+}
+```
+
 -------------------------------------------------
 
 # License

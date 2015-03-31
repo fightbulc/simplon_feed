@@ -2,6 +2,8 @@
 
 namespace Simplon\Feed\Vo\Atom;
 
+use Simplon\Feed\CastAway;
+
 /**
  * AtomVo
  * @package Simplon\Feed\Vo\Atom
@@ -10,34 +12,75 @@ namespace Simplon\Feed\Vo\Atom;
 class AtomVo extends AbstractAtomVo
 {
     /**
-     * @var string
+     * @var array
+     */
+    private $data;
+
+    /**
+     * @var null|string
      */
     protected $id;
 
     /**
-     * @var string
+     * @var null|string
      */
     protected $title;
 
     /**
-     * @var string
+     * @var null|string
      */
     protected $subtitle;
 
     /**
-     * @var string
+     * @var null|string
+     */
+    protected $author;
+
+    /**
+     * @var null|array
      */
     protected $link;
 
     /**
-     * @var string
+     * @var null|\DateTime
      */
     protected $updated;
 
     /**
-     * @var array
+     * @var null|array
+     */
+    protected $category;
+
+    /**
+     * @var null|array
+     */
+    protected $contributor;
+
+    /**
+     * @var null|array
+     */
+    protected $generator;
+
+    /**
+     * @var null|string
+     */
+    protected $icon;
+
+    /**
+     * @var null|string
+     */
+    protected $logo;
+
+    /**
+     * @var null|string
+     */
+    protected $rights;
+
+    /**
+     * @var null|array
      */
     protected $entries;
+
 
     /**
      * @param array $data
@@ -45,6 +88,9 @@ class AtomVo extends AbstractAtomVo
     public function __construct(array $data)
     {
         $vars = get_class_vars(get_class($this));
+
+        // cache raw data
+        $this->data = $data;
 
         foreach ($vars as $name => $val)
         {
@@ -56,27 +102,91 @@ class AtomVo extends AbstractAtomVo
     }
 
     /**
-     * @return string
+     * @return array
+     */
+    public function toArray()
+    {
+        return $this->data;
+    }
+
+    /**
+     * @return null|string
+     */
+    public function getAuthor()
+    {
+        return CastAway::toString($this->author);
+    }
+
+    /**
+     * @return array|null
+     */
+    public function getCategory()
+    {
+        return CastAway::toArray($this->category);
+    }
+
+    /**
+     * @return array|null
+     */
+    public function getContributor()
+    {
+        return CastAway::toArray($this->contributor);
+    }
+
+    /**
+     * @return array|null
+     */
+    public function getGenerator()
+    {
+        return CastAway::toArray($this->generator);
+    }
+
+    /**
+     * @return null|string
+     */
+    public function getIcon()
+    {
+        return CastAway::toString($this->icon);
+    }
+
+    /**
+     * @return null|string
+     */
+    public function getLogo()
+    {
+        return CastAway::toString($this->logo);
+    }
+
+    /**
+     * @return null|string
+     */
+    public function getRights()
+    {
+        return CastAway::toString($this->rights);
+    }
+
+    /**
+     * @return null|string
      */
     public function getId()
     {
-        return (string)$this->id;
+        return CastAway::toString($this->id);
     }
 
     /**
-     * @return string
+     * @return null|string
      */
     public function getSubtitle()
     {
-        return (string)$this->subtitle;
+        return CastAway::toString($this->subtitle);
     }
 
     /**
-     * @return string
+     * @return \DateTime|null
      */
     public function getUpdated()
     {
-        return (string)$this->updated;
+        return CastAway::toDateTime($this->updated);
     }
 
     /**
@@ -108,18 +218,18 @@ class AtomVo extends AbstractAtomVo
     }
 
     /**
-     * @return mixed
+     * @return array|null
      */
     public function getLink()
     {
-        return $this->link;
+        return CastAway::toArray($this->link);
     }
 
     /**
-     * @return string
+     * @return null|string
      */
     public function getTitle()
     {
-        return (string)$this->title;
+        return CastAway::toString($this->title);
     }
 }

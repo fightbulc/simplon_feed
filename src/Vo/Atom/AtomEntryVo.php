@@ -2,6 +2,8 @@
 
 namespace Simplon\Feed\Vo\Atom;
 
+use Simplon\Feed\CastAway;
+
 /**
  * AtomEntryVo
  * @package Simplon\Feed\Vo\Atom
@@ -10,39 +12,69 @@ namespace Simplon\Feed\Vo\Atom;
 class AtomEntryVo extends AbstractAtomVo
 {
     /**
-     * @var string
+     * @var array
+     */
+    private $data;
+
+    /**
+     * @var null|string
      */
     protected $id;
 
     /**
-     * @var string
+     * @var null|string
      */
     protected $title;
 
     /**
-     * @var string
+     * @var null|string
      */
     protected $summary;
 
     /**
-     * @var string
+     * @var null|string
      */
     protected $content;
 
     /**
-     * @var string
+     * @var null|string
      */
     protected $link;
 
     /**
-     * @var string
+     * @var null|string
      */
     protected $author;
 
     /**
-     * @var \DateTime
+     * @var null|\DateTime
      */
     protected $updated;
+
+    /**
+     * @var null|\DateTime
+     */
+    protected $published;
+
+    /**
+     * @var null|array
+     */
+    protected $category;
+
+    /**
+     * @var null|array
+     */
+    protected $contributor;
+
+    /**
+     * @var null|array
+     */
+    protected $source;
+
+    /**
+     * @var null|array
+     */
+    protected $rights;
 
     /**
      * @param array $data
@@ -50,6 +82,9 @@ class AtomEntryVo extends AbstractAtomVo
     public function __construct(array $data)
     {
         $vars = get_class_vars(get_class($this));
+
+        // cache raw data
+        $this->data = $data;
 
         foreach ($vars as $name => $val)
         {
@@ -61,63 +96,106 @@ class AtomEntryVo extends AbstractAtomVo
     }
 
     /**
-     * @return string
+     * @return array
+     */
+    public function toArray()
+    {
+        return $this->data;
+    }
+
+    /**
+     * @return array|null
+     */
+    public function getCategory()
+    {
+        return CastAway::toArray($this->category);
+    }
+
+    /**
+     * @return array|null
+     */
+    public function getContributor()
+    {
+        return CastAway::toArray($this->contributor);
+    }
+
+    /**
+     * @return \DateTime|null
+     */
+    public function getPublished()
+    {
+        return CastAway::toDateTime($this->published);
+    }
+
+    /**
+     * @return array|null
+     */
+    public function getRights()
+    {
+        return CastAway::toArray($this->rights);
+    }
+
+    /**
+     * @return array|null
+     */
+    public function getSource()
+    {
+        return CastAway::toArray($this->source);
+    }
+
+    /**
+     * @return null|string
      */
     public function getContent()
     {
-        return (string)$this->content;
+        return CastAway::toString($this->content);
     }
 
     /**
-     * @return \DateTime
+     * @return \DateTime|null
      */
     public function getUpdated()
     {
-        if ($this->updated !== null)
-        {
-            return new \DateTime($this->updated);
-        }
-
-        return null;
+        return CastAway::toDateTime($this->updated);
     }
 
     /**
-     * @return string
+     * @return null|string
      */
     public function getId()
     {
-        return (string)$this->id;
+        return CastAway::toString($this->id);
     }
 
     /**
-     * @return string
+     * @return null|string
      */
     public function getSummary()
     {
-        return (string)$this->summary;
+        return CastAway::toString($this->summary);
     }
 
     /**
-     * @return string
+     * @return null|string
      */
     public function getAuthor()
     {
-        return (string)$this->author;
+        return CastAway::toString($this->author);
     }
 
     /**
-     * @return string
+     * @return null|string
      */
     public function getLink()
     {
-        return (string)$this->link;
+        return CastAway::toString($this->link);
     }
 
     /**
-     * @return string
+     * @return null|string
      */
     public function getTitle()
     {
-        return (string)$this->title;
+        return CastAway::toString($this->title);
     }
 }
