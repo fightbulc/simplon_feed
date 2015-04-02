@@ -17,7 +17,7 @@ class RssItemVo extends AbstractRssVo
     private $data;
 
     /**
-     * @var null|string
+     * @var array|null
      */
     protected $guid;
 
@@ -126,7 +126,7 @@ class RssItemVo extends AbstractRssVo
     }
 
     /**
-     * @return \DateTime
+     * @return null|\DateTime
      */
     public function getPubDate()
     {
@@ -134,15 +134,31 @@ class RssItemVo extends AbstractRssVo
     }
 
     /**
-     * @return string
+     * @return array|null
      */
     public function getGuid()
     {
-        return CastAway::toString($this->guid);
+        $guid = CastAway::toArray($this->guid);
+
+        if ($guid !== null)
+        {
+            if (isset($guid['attrs']) === false)
+            {
+                $guid = [
+                    'content' => $guid[0],
+                    'attrs'   => [
+                        'isPermaLink' => true
+                    ]
+                ];
+
+            }
+        }
+
+        return $guid;
     }
 
     /**
-     * @return string
+     * @return null|string
      */
     public function getDescription()
     {
@@ -150,7 +166,7 @@ class RssItemVo extends AbstractRssVo
     }
 
     /**
-     * @return string
+     * @return null|string
      */
     public function getAuthor()
     {
@@ -158,7 +174,7 @@ class RssItemVo extends AbstractRssVo
     }
 
     /**
-     * @return string
+     * @return null|string
      */
     public function getLink()
     {
@@ -166,7 +182,7 @@ class RssItemVo extends AbstractRssVo
     }
 
     /**
-     * @return string
+     * @return null|string
      */
     public function getTitle()
     {
