@@ -2,7 +2,7 @@
 
 namespace Simplon\Feed\Vo\Rss;
 
-use Simplon\Feed\CastAway;
+use Simplon\Helper\CastAway;
 
 /**
  * RssItemVo

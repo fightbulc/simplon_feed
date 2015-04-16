@@ -2,7 +2,7 @@
 
 namespace Simplon\Feed\Vo\Atom;
 
-use Simplon\Feed\CastAway;
+use Simplon\Helper\CastAway;
 
 /**
  * AtomEntryVo
