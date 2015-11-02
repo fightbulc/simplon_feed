@@ -61,7 +61,11 @@ class FeedReader
         $this->data = [];
         $this->namespaces = [];
 
-        $this->simpleXmlElement = simplexml_load_file($url);
+        // fix broken XML
+        $xml = file_get_contents($url);
+        $xml = preg_replace('#&(?=[a-z_0-9]+=)#', '&amp;', $xml);
+
+        $this->simpleXmlElement = simplexml_load_string($xml);
 
         return $this;
     }
@@ -271,7 +275,7 @@ class FeedReader
     }
 
     /**
-     * @param mixed             $data
+     * @param mixed $data
      * @param \SimpleXMLElement $attributes
      *
      * @return array
@@ -313,9 +317,9 @@ class FeedReader
     }
 
     /**
-     * @param array  $data
+     * @param array $data
      * @param string $tag
-     * @param mixed  $value
+     * @param mixed $value
      *
      * @return array
      */
@@ -358,16 +362,16 @@ class FeedReader
     }
 
     /**
-     * @param array             $knownTags
+     * @param array $knownTags
      * @param \SimpleXMLElement $entry
-     * @param null|string       $ignoreTags
+     * @param null|string $ignoreTags
      *
      * @return array
      */
     private function readTags(array $knownTags, $entry, $ignoreTags = null)
     {
         $data = [
-            'metas' => []
+            'metas' => [],
         ];
 
         foreach ($entry as $tag => $value)
