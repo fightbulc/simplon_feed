@@ -52,9 +52,10 @@ class FeedReader
     }
 
     /**
-     * @param $url
+     * @param string $url
      *
-     * @return FeedReader
+     * @return $this
+     * @throws \Exception
      */
     private function fetch($url)
     {
@@ -62,7 +63,13 @@ class FeedReader
         $this->namespaces = [];
 
         // fix broken XML
-        $xml = file_get_contents($url);
+        $xml = @file_get_contents($url);
+
+        if (empty($xml))
+        {
+            throw new \Exception('file does not exist');
+        }
+
         $xml = preg_replace('#&(?=[a-z_0-9]+=)#', '&amp;', $xml);
 
         $this->simpleXmlElement = simplexml_load_string($xml);
